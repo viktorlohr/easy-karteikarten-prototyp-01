@@ -2,10 +2,235 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
-void main() => runApp(const MaterialApp(home: FancyMathCards()));
+void main() => runApp(const MaterialApp(home: HomeScreen()));
+
+// ─── HOME SCREEN ─────────────────────────────────────────────────────────────
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  final Color myBlue = const Color(0xFF264358);
+  final Color myOrange = const Color(0xFFF5AC26);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[300],
+      appBar: AppBar(
+        title: Image.asset(
+          'assets/images/akademus_logo.jpg',
+          height: 80,
+          fit: BoxFit.contain,
+        ),
+        toolbarHeight: 100,
+        backgroundColor: Colors.white,
+        foregroundColor: myOrange,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Willkommen!',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: myBlue,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Was möchtest du heute lernen?',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 48),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TopicSelectionScreen()),
+              ),
+              icon: const Icon(Icons.style_outlined),
+              label: const Text(
+                'Mathe Karteikarten',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: myBlue,
+                foregroundColor: myOrange,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── TOPIC SELECTION SCREEN ───────────────────────────────────────────────────
+
+class TopicSelectionScreen extends StatelessWidget {
+  const TopicSelectionScreen({super.key});
+
+  final Color myBlue = const Color(0xFF264358);
+  final Color myOrange = const Color(0xFFF5AC26);
+
+  static const List<Map<String, dynamic>> _topics = [
+    {'label': 'Analysis', 'icon': Icons.show_chart},
+    {'label': 'Geometrie', 'icon': Icons.square_foot},
+    {'label': 'Stochastik', 'icon': Icons.bar_chart},
+    {'label': 'Grundlagen', 'icon': Icons.functions},
+    {'label': 'Gemischt', 'icon': Icons.shuffle},
+  ];
+
+  void _goHome(BuildContext context) =>
+      Navigator.popUntil(context, (route) => route.isFirst);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[300],
+      appBar: AppBar(
+        title: GestureDetector(
+          onTap: () => _goHome(context),
+          child: Image.asset(
+            'assets/images/akademus_logo.jpg',
+            height: 80,
+            fit: BoxFit.contain,
+          ),
+        ),
+        toolbarHeight: 100,
+        backgroundColor: Colors.white,
+        foregroundColor: myOrange,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => _goHome(context),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Thema wählen',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: myBlue,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Wähle ein Thema, um mit den Karteikarten zu beginnen.',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 28),
+            // 2-column grid for first 4 topics
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.6,
+              children: _topics
+                  .take(4)
+                  .map(
+                    (t) => _TopicCard(
+                      label: t['label'],
+                      icon: t['icon'],
+                      myBlue: myBlue,
+                      myOrange: myOrange,
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 16),
+            // "Gemischt" spans full width
+            _TopicCard(
+              label: _topics[4]['label'],
+              icon: _topics[4]['icon'],
+              myBlue: myBlue,
+              myOrange: myOrange,
+              fullWidth: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TopicCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color myBlue;
+  final Color myOrange;
+  final bool fullWidth;
+
+  const _TopicCard({
+    required this.label,
+    required this.icon,
+    required this.myBlue,
+    required this.myOrange,
+    this.fullWidth = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final card = GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => FancyMathCards(topic: label)),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: myBlue,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: myOrange, size: 28),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: myOrange,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return fullWidth ? SizedBox(width: double.infinity, child: card) : card;
+  }
+}
+
+// ─── FLASHCARD SCREEN ─────────────────────────────────────────────────────────
 
 class FancyMathCards extends StatefulWidget {
-  const FancyMathCards({super.key});
+  final String topic;
+  const FancyMathCards({super.key, required this.topic});
 
   @override
   State<FancyMathCards> createState() => _FancyMathCardsState();
@@ -17,7 +242,6 @@ class _FancyMathCardsState extends State<FancyMathCards>
   late Animation<double> _animation;
   bool _isFront = true;
 
-  // Define our color palette
   final Color myBlue = const Color(0xFF264358);
   final Color myOrange = const Color(0xFFF5AC26);
 
@@ -28,7 +252,6 @@ class _FancyMathCardsState extends State<FancyMathCards>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-
     _animation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutBack),
     );
@@ -43,51 +266,77 @@ class _FancyMathCardsState extends State<FancyMathCards>
     _isFront = !_isFront;
   }
 
+  void _goHome(BuildContext context) =>
+      Navigator.popUntil(context, (route) => route.isFirst);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Colors.grey[300], // Slightly darker background to make white card pop
+      backgroundColor: Colors.grey[300],
       appBar: AppBar(
-        title: Image.asset(
-          'assets/images/akademus_logo.jpg',
-          height: 80, // Adjust height to fit nicely in the AppBar
-          fit: BoxFit.contain,
-        ),
-        toolbarHeight: 100,
-        backgroundColor: Colors.white, // White background to match the logo
-        foregroundColor: myOrange,
-      ),
-      body: Center(
-        child: GestureDetector(
-          onTap: _flipCard,
-          child: AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              final angle = _animation.value * pi;
-              return Transform(
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(angle),
-                alignment: Alignment.center,
-                // Logic to switch between the two widgets at the 90-degree mark
-                child: angle < pi / 2 ? _buildFront() : _buildBack(),
-              );
-            },
+        title: GestureDetector(
+          onTap: () => _goHome(context),
+          child: Image.asset(
+            'assets/images/akademus_logo.jpg',
+            height: 80,
+            fit: BoxFit.contain,
           ),
         ),
+        toolbarHeight: 100,
+        backgroundColor: Colors.white,
+        foregroundColor: myOrange,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 24),
+          Text(
+            widget.topic,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: myBlue,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tippe auf die Karte zum Umdrehen',
+            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: _flipCard,
+            child: AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                final angle = _animation.value * pi;
+                return Transform(
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateY(angle),
+                  alignment: Alignment.center,
+                  child: angle < pi / 2 ? _buildFront() : _buildBack(),
+                );
+              },
+            ),
+          ),
+          const Spacer(),
+        ],
       ),
     );
   }
 
   Widget _buildFront() {
     return _cardWrapper(
-      backgroundColor: myBlue, // Navy Blue Background
+      backgroundColor: myBlue,
       child: Text(
         "Wie lautet die Formel für die Kreisfläche?",
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: myOrange, // Orange Font
+          color: myOrange,
           fontSize: 26,
           fontWeight: FontWeight.bold,
         ),
@@ -96,14 +345,12 @@ class _FancyMathCardsState extends State<FancyMathCards>
   }
 
   Widget _buildBack() {
-    // We flip the back content so it's not mirrored
     return Transform(
       transform: Matrix4.identity()..rotateY(pi),
       alignment: Alignment.center,
       child: _cardWrapper(
-        backgroundColor: Colors.white, // White Background
+        backgroundColor: Colors.white,
         child: Math.tex(
-          // Use Navy Blue for the math symbols
           r'{A = \pi r^2}',
           textStyle: TextStyle(fontSize: 40, color: myBlue),
         ),
@@ -111,7 +358,6 @@ class _FancyMathCardsState extends State<FancyMathCards>
     );
   }
 
-  // Updated wrapper to accept a background color
   Widget _cardWrapper({required Color backgroundColor, required Widget child}) {
     return Container(
       width: 320,

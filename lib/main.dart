@@ -138,9 +138,37 @@ class TopicSelectionScreen extends StatelessWidget {
 const Map<String, List<Map<String, String>>> topicCards = {
   'Analysis': [
     {
-      'question': r'\text{Welche Arten von Polstellen gibt es?}',
-      'answer':
-          r'\text{1. Mit VZW: Ungerader Exponent im Nenner.} \\ \text{2. Ohne VZW: Gerader Exponent im Nenner.} \\ \text{Ordnung } k \text{ beschreibt die Stärke des Pols.}',
+      'question': r'\text{Polstellen}',
+      'answer': r'''
+        \begin{aligned}
+        &\textbf{Polstellen} \\[6pt]
+
+        &\text{Eine Polstelle liegt bei } x_0, \\
+        &\text{wenn der Nenner } = 0 \text{ und der Zähler } \neq 0. \\[6pt]
+
+        &f(x) = \frac{p(x)}{q(x)}, \quad
+        q(x_0) = 0,\; p(x_0) \neq 0 \\[10pt]
+
+        &\textbf{Verhalten:} \\
+
+        &\text{Ungerader Exponent (VZW):} \\
+        &\lim_{x \to x_0^-} f(x) = -\infty \\
+        &\lim_{x \to x_0^+} f(x) = +\infty \\[6pt]
+
+        &\text{Gerader Exponent (kein VZW):} \\
+        &\lim_{x \to x_0^-} f(x) = +\infty \\
+        &\lim_{x \to x_0^+} f(x) = +\infty \\[10pt]
+
+        &\textbf{Beispiele:} \\
+        &\frac{1}{x} \Rightarrow x_0 = 0 \\
+        &\frac{1}{x^2} \Rightarrow x_0 = 0 \\[10pt]
+
+        &\textbf{Hinweis:} \\
+        &\text{Kürzen möglich → keine Polstelle,} \\
+        &\text{sondern hebbare Lücke.}
+
+        \end{aligned}
+        ''',
     },
     {
       'question': r'\text{Was ist die Ableitung von } f(x) = x^2?',
@@ -477,6 +505,7 @@ class _FancyMathCardsState extends State<FancyMathCards>
         // textAlign: TextAlign.center,
         textStyle: TextStyle(
           color: myOrange,
+          fontFamily: 'roboto',
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),

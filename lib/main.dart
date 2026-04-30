@@ -6,6 +6,8 @@ void main() => runApp(const MaterialApp(home: HomeScreen()));
 
 // ─── HOME SCREEN ─────────────────────────────────────────────────────────────
 
+// ─── HOME SCREEN ─────────────────────────────────────────────────────────────
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -15,7 +17,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Keep the AppBar as is
       appBar: AppBar(
         title: Image.asset(
           'assets/images/akademus_logo.jpg',
@@ -28,76 +29,83 @@ class HomeScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // 1. The Background Image
+          // 1. Background Image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                  'assets/images/background_female.jpg',
-                ), // Replace with your path
-                fit: BoxFit.cover, // This makes it fill the whole screen
+                image: AssetImage('assets/images/background_female.jpg'),
+                fit: BoxFit.cover,
               ),
             ),
           ),
 
-          // 2. An optional Overlay (to make text more readable)
+          // 2. Overlay for readability
           Container(color: Colors.white.withOpacity(0.8)),
 
-          // Buttons
-          const MenuButton(
-            label: 'Mathe Karteikarten',
-            icon: Icons.style_outlined,
-            destination: TopicSelectionScreen(),
-          ),
+          // 3. Menu Content
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Willkommen!',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: myBlue,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Was möchtest du heute tun?',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+                ),
+                const SizedBox(height: 40),
 
-          //Center(
-          // child: Column(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     Text(
-          //       'Willkommen!',
-          //       style: TextStyle(
-          //         fontSize: 32,
-          //         fontWeight: FontWeight.bold,
-          //         color: myBlue,
-          //       ),
-          //     ),
-          //     const SizedBox(height: 12),
-          //     Text(
-          //       'Was möchtest du heute lernen?',
-          //       style: TextStyle(fontSize: 16, color: Colors.grey[800]),
-          //     ),
-          //     const SizedBox(height: 48),
-          //     ElevatedButton.icon(
-          //       onPressed: () => Navigator.push(
-          //         context,
-          //         MaterialPageRoute(
-          //           builder: (_) => const TopicSelectionScreen(),
-          //         ),
-          //       ),
-          //       icon: const Icon(Icons.style_outlined),
-          //       label: const Text(
-          //         'Mathe Karteikarten',
-          //         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          //       ),
-          //       style: ElevatedButton.styleFrom(
-          //         backgroundColor: myBlue,
-          //         foregroundColor: myOrange,
-          //         padding: const EdgeInsets.symmetric(
-          //           horizontal: 32,
-          //           vertical: 16,
-          //         ),
-          //         shape: RoundedRectangleBorder(
-          //           borderRadius: BorderRadius.circular(16),
-          //         ),
-          //         elevation: 6,
-          //       ),
-          //     ),
-          //   ],
-          // ),
-          //),
+                // Flashcards Button
+                const MenuButton(
+                  label: 'Mathe Karteikarten',
+                  icon: Icons.style_outlined,
+                  destination: TopicSelectionScreen(),
+                ),
+                const SizedBox(height: 16),
+
+                // AI Chat Button
+                const MenuButton(
+                  label: 'KI Mathe-Tutor',
+                  icon: Icons.auto_awesome_outlined,
+                  destination: PlaceholderScreen(title: 'KI Tutor Chat'),
+                ),
+                const SizedBox(height: 16),
+
+                // Statistics Button
+                const MenuButton(
+                  label: 'Lern-Statistiken',
+                  icon: Icons.insert_chart_outlined,
+                  destination: PlaceholderScreen(
+                    title: 'Langzeit-Statistiken kommen bald',
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+// ─── PLACEHOLDER SCREEN (Temporary) ──────────────────────────────────────────
+
+class PlaceholderScreen extends StatelessWidget {
+  final String title;
+  const PlaceholderScreen({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(child: Text('$title kommt bald!')),
     );
   }
 }
@@ -130,60 +138,57 @@ class TopicSelectionScreen extends StatelessWidget {
 const Map<String, List<Map<String, String>>> topicCards = {
   'Analysis': [
     {
-      'question': 'Was ist die Ableitung von f(x) = x²?',
+      'question': r'\text{Was ist die Ableitung von } f(x) = x^2?',
       'answer': r"f'(x) = 2x",
     },
     {
-      'question': 'Was ist die Ableitung von f(x) = sin(x)?',
+      'question': r'\text{Was ist die Ableitung von } f(x) = \sin(x)?',
       'answer': r"f'(x) = \cos(x)",
     },
     {
-      'question': 'Was ist das Integral von f(x) = 2x?',
+      'question': r'\text{Was ist das Integral von } f(x) = 2x?',
       'answer': r'\int 2x\,dx = x^2 + C',
     },
   ],
   'Geometrie': [
     {
-      'question': 'Wie lautet die Formel für die Kreisfläche?',
+      'question': r'\text{Wie lautet die Formel für die Kreisfläche?}',
       'answer': r'A = \pi r^2',
     },
     {
-      'question': 'Wie berechnet man den Umfang eines Kreises?',
+      'question': r'\text{Wie berechnet man den Umfang eines Kreises?}',
       'answer': r'U = 2\pi r',
     },
     {
-      'question': 'Wie lautet die Formel für das Volumen einer Kugel?',
+      'question': r'\text{Wie lautet die Formel für das Volumen einer Kugel?}',
       'answer': r'V = \frac{4}{3}\pi r^3',
     },
   ],
   'Stochastik': [
     {
       'question':
-          'Was ist die Wahrscheinlichkeit eines Ereignisses A in einem Laplace-Experiment?',
+          r'\text{Wahrscheinlichkeit von A in einem Laplace-Experiment?}',
       'answer': r'P(A) = \frac{\text{günstig}}{\text{möglich}}',
     },
     {
-      'question': 'Wie lautet die Binomialformel für P(X = k)?',
+      'question': r'\text{Wie lautet die Binomialformel für } P(X = k)?',
       'answer': r'P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}',
     },
     {
-      'question': 'Was ist der Erwartungswert einer Binomialverteilung?',
+      'question': r'\text{Erwartungswert einer Binomialverteilung?}',
       'answer': r'E(X) = n \cdot p',
     },
   ],
   'Grundlagen': [
     {
-      'question': 'Wie lautet der Satz des Pythagoras?',
+      'question': r'\text{Wie lautet der Satz des Pythagoras?}',
       'answer': r'a^2 + b^2 = c^2',
     },
     {
-      'question': 'Wie lautet die Mitternachtsformel?',
+      'question': r'\text{Wie lautet die Mitternachtsformel?}',
       'answer': r'x_{1,2} = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}',
     },
-    {
-      'question': 'Was ist der Logarithmus zur Basis 10 von 1000?',
-      'answer': r'\log_{10}(1000) = 3',
-    },
+    {'question': r'\text{Was ist } \log_{10}(1000)?', 'answer': r'3'},
   ],
 };
 
@@ -230,6 +235,7 @@ class _FancyMathCardsState extends State<FancyMathCards>
 
   int _currentIndex = 0;
   bool _isFront = true;
+  bool _isExpanded = false; // Tracks if the current card is grown
 
   // Scoring
   int _knownCount = 0;
@@ -415,7 +421,7 @@ class _FancyMathCardsState extends State<FancyMathCards>
                     alignment: Alignment.center,
                     child: angle < pi / 2
                         ? _buildFront(card['question']!)
-                        : _buildBack(card['answer']!),
+                        : _buildBack(card),
                   );
                 },
               ),
@@ -461,10 +467,10 @@ class _FancyMathCardsState extends State<FancyMathCards>
   Widget _buildFront(String question) {
     return _cardWrapper(
       backgroundColor: myBlue,
-      child: Text(
+      child: Math.tex(
         question,
-        textAlign: TextAlign.center,
-        style: TextStyle(
+        // textAlign: TextAlign.center,
+        textStyle: TextStyle(
           color: myOrange,
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -473,24 +479,55 @@ class _FancyMathCardsState extends State<FancyMathCards>
     );
   }
 
-  Widget _buildBack(String answer) {
+  Widget _buildBack(Map<String, String> card) {
+    final String? imagePath = card['image'];
+
     return Transform(
       transform: Matrix4.identity()..rotateY(pi),
       alignment: Alignment.center,
-      child: _cardWrapper(
-        backgroundColor: Colors.white,
-        child: Math.tex(
-          answer,
-          textStyle: TextStyle(fontSize: 28, color: myBlue),
-        ),
+      child: Stack(
+        children: [
+          _cardWrapper(
+            backgroundColor: Colors.white,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Math.tex(
+                  card['answer']!,
+                  textStyle: TextStyle(fontSize: 28, color: myBlue),
+                ),
+                if (imagePath != null) ...[
+                  const SizedBox(height: 16),
+                  Image.asset(imagePath, fit: BoxFit.contain),
+                ],
+              ],
+            ),
+          ),
+
+          // The "Grow/Shrink" Toggle Button
+          Positioned(
+            bottom: 8,
+            right: 8,
+            child: IconButton(
+              icon: Icon(
+                _isExpanded ? Icons.unfold_less : Icons.unfold_more,
+                color: myBlue.withOpacity(0.5),
+              ),
+              onPressed: () => setState(() => _isExpanded = !_isExpanded),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _cardWrapper({required Color backgroundColor, required Widget child}) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300), // Smooth growing animation
+      curve: Curves.easeInOut,
       width: double.infinity,
-      height: 200,
+      // If expanded, allow it to be 400px; otherwise, stick to 200px
+      height: _isExpanded ? 400 : 200,
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(25),
@@ -503,7 +540,11 @@ class _FancyMathCardsState extends State<FancyMathCards>
         ],
       ),
       alignment: Alignment.center,
-      child: Padding(padding: const EdgeInsets.all(16.0), child: child),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        // Wrap child in SingleChildScrollView so long text is scrollable when grown
+        child: SingleChildScrollView(child: child),
+      ),
     );
   }
 
@@ -1044,6 +1085,54 @@ class _SelectionCard extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ----- makes the card expandable ----
+class ExpandedCardView extends StatelessWidget {
+  final Map<String, String> card;
+  final Color backgroundColor;
+
+  const ExpandedCardView({
+    super.key,
+    required this.card,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final String? imagePath = card['image'];
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const CloseButton(color: Colors.grey),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            Math.tex(
+              card['answer']!,
+              textStyle: const TextStyle(
+                fontSize: 24,
+                color: Color(0xFF264358),
+              ),
+            ),
+            if (imagePath != null) ...[
+              const SizedBox(height: 20),
+              imagePath.startsWith('http')
+                  ? Image.network(imagePath)
+                  : Image.asset(imagePath),
+            ],
+            // Add extra space at the bottom for comfortable reading
+            const SizedBox(height: 100),
           ],
         ),
       ),

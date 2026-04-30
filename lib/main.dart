@@ -44,52 +44,59 @@ class HomeScreen extends StatelessWidget {
           Container(color: Colors.white.withOpacity(0.8)),
 
           // 3. Your Original Content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Willkommen!',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: myBlue,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Was möchtest du heute lernen?',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[800]),
-                ),
-                const SizedBox(height: 48),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const TopicSelectionScreen(),
-                    ),
-                  ),
-                  icon: const Icon(Icons.style_outlined),
-                  label: const Text(
-                    'Mathe Karteikarten',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: myBlue,
-                    foregroundColor: myOrange,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 6,
-                  ),
-                ),
-              ],
-            ),
+          // Mathe Karteikarten Widget
+          const MenuButton(
+            label: 'Mathe Karteikarten',
+            icon: Icons.style_outlined,
+            destination: TopicSelectionScreen(),
           ),
+
+          //Center(
+          // child: Column(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     Text(
+          //       'Willkommen!',
+          //       style: TextStyle(
+          //         fontSize: 32,
+          //         fontWeight: FontWeight.bold,
+          //         color: myBlue,
+          //       ),
+          //     ),
+          //     const SizedBox(height: 12),
+          //     Text(
+          //       'Was möchtest du heute lernen?',
+          //       style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+          //     ),
+          //     const SizedBox(height: 48),
+          //     ElevatedButton.icon(
+          //       onPressed: () => Navigator.push(
+          //         context,
+          //         MaterialPageRoute(
+          //           builder: (_) => const TopicSelectionScreen(),
+          //         ),
+          //       ),
+          //       icon: const Icon(Icons.style_outlined),
+          //       label: const Text(
+          //         'Mathe Karteikarten',
+          //         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          //       ),
+          //       style: ElevatedButton.styleFrom(
+          //         backgroundColor: myBlue,
+          //         foregroundColor: myOrange,
+          //         padding: const EdgeInsets.symmetric(
+          //           horizontal: 32,
+          //           vertical: 16,
+          //         ),
+          //         shape: RoundedRectangleBorder(
+          //           borderRadius: BorderRadius.circular(16),
+          //         ),
+          //         elevation: 6,
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          //),
         ],
       ),
     );
@@ -940,6 +947,7 @@ class StatsScreen extends StatelessWidget {
   }
 }
 
+// --- stat card ----
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String value;
@@ -981,6 +989,49 @@ class _StatCard extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---- Menu button ----
+class MenuButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Widget destination; // This stores the screen you want to go to
+
+  const MenuButton({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.destination,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // We define your brand colors here once so they aren't arguments
+    const Color myBlue = Color(0xFF264358);
+    const Color myOrange = Color(0xFFF5AC26);
+
+    return ElevatedButton.icon(
+      onPressed: () {
+        // Boilerplate is hidden here! You never write this again.
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => destination),
+        );
+      },
+      icon: Icon(icon),
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: myBlue,
+        foregroundColor: myOrange,
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 6,
       ),
     );
   }

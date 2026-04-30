@@ -49,18 +49,10 @@ class _FancyMathCardsState extends State<FancyMathCards>
       backgroundColor:
           Colors.grey[300], // Slightly darker background to make white card pop
       appBar: AppBar(
-        title: GestureDetector(
-          onTap: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          },
-          child: Image.asset(
-            'assets/images/akademus_logo.jpg',
-            height: 80,
-            fit: BoxFit.contain,
-          ),
+        title: Image.asset(
+          'assets/images/akademus_logo.jpg',
+          height: 80, // Adjust height to fit nicely in the AppBar
+          fit: BoxFit.contain,
         ),
         toolbarHeight: 100,
         backgroundColor: Colors.white, // White background to match the logo
@@ -144,17 +136,5 @@ class _FancyMathCardsState extends State<FancyMathCards>
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
-      body: const Center(child: Text("Welcome to Akademus!")),
-    );
   }
 }

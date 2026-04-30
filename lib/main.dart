@@ -138,6 +138,11 @@ class TopicSelectionScreen extends StatelessWidget {
 const Map<String, List<Map<String, String>>> topicCards = {
   'Analysis': [
     {
+      'question': r'\text{Welche Arten von Polstellen gibt es?}',
+      'answer':
+          r'\text{1. Mit VZW: Ungerader Exponent im Nenner.} \\ \text{2. Ohne VZW: Gerader Exponent im Nenner.} \\ \text{Ordnung } k \text{ beschreibt die Stärke des Pols.}',
+    },
+    {
       'question': r'\text{Was ist die Ableitung von } f(x) = x^2?',
       'answer': r"f'(x) = 2x",
     },
@@ -482,6 +487,16 @@ class _FancyMathCardsState extends State<FancyMathCards>
   Widget _buildBack(Map<String, String> card) {
     final String? imagePath = card['image'];
 
+    // Aggressive sanitization: removes all newlines, carriage returns,
+    // and tabs that often cause the CrNode/Temporary Node errors.
+    final String rawContent = card['answer'] ?? '';
+    final String sanitizedAnswer = rawContent
+        .replaceAll(
+          RegExp(r'[\n\r\t]'),
+          ' ',
+        ) // Replace all whitespace with a single space
+        .trim();
+
     return Transform(
       transform: Matrix4.identity()..rotateY(pi),
       alignment: Alignment.center,
@@ -490,11 +505,18 @@ class _FancyMathCardsState extends State<FancyMathCards>
           _cardWrapper(
             backgroundColor: Colors.white,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize
+                  .min, // Prevents the column from pushing boundaries
               children: [
+                // Use a Key here. This forces Flutter to rebuild the widget
+                // from scratch if the answer changes, clearing old node errors.
                 Math.tex(
-                  card['answer']!,
-                  textStyle: TextStyle(fontSize: 28, color: myBlue),
+                  sanitizedAnswer,
+                  key: ValueKey(sanitizedAnswer),
+                  textStyle: const TextStyle(
+                    fontSize: 20,
+                    color: Color(0xFF264358),
+                  ),
                 ),
                 if (imagePath != null) ...[
                   const SizedBox(height: 16),
@@ -503,16 +525,11 @@ class _FancyMathCardsState extends State<FancyMathCards>
               ],
             ),
           ),
-
-          // The "Grow/Shrink" Toggle Button
           Positioned(
             bottom: 8,
             right: 8,
             child: IconButton(
-              icon: Icon(
-                _isExpanded ? Icons.unfold_less : Icons.unfold_more,
-                color: myBlue.withOpacity(0.5),
-              ),
+              icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
               onPressed: () => setState(() => _isExpanded = !_isExpanded),
             ),
           ),

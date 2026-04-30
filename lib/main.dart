@@ -144,8 +144,8 @@ const Map<String, List<Map<String, String>>> topicCards = {
         \begin{aligned}
         &\textbf{Polstellen} \\[6pt]
 
-        &\text{Eine Polstelle liegt bei } x_0, \\
-        &\text{wenn der Nenner gegen 0}  \\
+        &\text{Eine Polstelle liegt bei } x_0, 
+        \text{wenn der Nenner gegen 0}  \\
         &\text{und der Zähler bei } x_0 . \\
         &\text{ungleich null ist. }\\[6pt]
 
@@ -520,14 +520,10 @@ class _FancyMathCardsState extends State<FancyMathCards>
   Widget _buildBack(Map<String, String> card) {
     final String? imagePath = card['image'];
 
-    // Aggressive sanitization: removes all newlines, carriage returns,
-    // and tabs that often cause the CrNode/Temporary Node errors.
+    // Sanitize the LaTeX string to prevent rendering errors[cite: 2]
     final String rawContent = card['answer'] ?? '';
     final String sanitizedAnswer = rawContent
-        .replaceAll(
-          RegExp(r'[\n\r\t]'),
-          ' ',
-        ) // Replace all whitespace with a single space
+        .replaceAll(RegExp(r'[\n\r\t]'), ' ')
         .trim();
 
     return Transform(
@@ -538,11 +534,8 @@ class _FancyMathCardsState extends State<FancyMathCards>
           _cardWrapper(
             backgroundColor: Colors.white,
             child: Column(
-              mainAxisSize: MainAxisSize
-                  .min, // Prevents the column from pushing boundaries
+              mainAxisSize: MainAxisSize.min, // Wrap content tightly[cite: 2]
               children: [
-                // Use a Key here. This forces Flutter to rebuild the widget
-                // from scratch if the answer changes, clearing old node errors.
                 Math.tex(
                   sanitizedAnswer,
                   key: ValueKey(sanitizedAnswer),
@@ -551,21 +544,16 @@ class _FancyMathCardsState extends State<FancyMathCards>
                     color: Color(0xFF264358),
                   ),
                 ),
-                // In main.dart, inside the _buildBack method
                 if (imagePath != null) ...[
                   const SizedBox(height: 16),
-                  // Check if the file is an SVG
                   imagePath.endsWith('.svg')
-                      ? SvgPicture.asset(
-                          imagePath,
-                          fit: BoxFit.contain,
-                          height: 150, // You can adjust the height as needed
-                        )
+                      ? SvgPicture.asset(imagePath, fit: BoxFit.contain)
                       : Image.asset(imagePath, fit: BoxFit.contain),
                 ],
               ],
             ),
           ),
+          // The Expand Button[cite: 2]
           Positioned(
             bottom: 8,
             right: 8,
@@ -581,11 +569,14 @@ class _FancyMathCardsState extends State<FancyMathCards>
 
   Widget _cardWrapper({required Color backgroundColor, required Widget child}) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300), // Smooth growing animation
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       width: double.infinity,
-      // If expanded, allow it to be 400px; otherwise, stick to 200px
-      height: _isExpanded ? 400 : 200,
+      constraints: BoxConstraints(
+        minHeight: 200,
+        // Cap the vertical height so the rating buttons remain visible
+        maxHeight: _isExpanded ? 500 : 200,
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(25),
@@ -600,8 +591,15 @@ class _FancyMathCardsState extends State<FancyMathCards>
       alignment: Alignment.center,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        // Wrap child in SingleChildScrollView so long text is scrollable when grown
-        child: SingleChildScrollView(child: child),
+        // 1. Vertical scrolling for long content
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          // 2. Horizontal scrolling for wide formulas or images
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: child,
+          ),
+        ),
       ),
     );
   }

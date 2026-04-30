@@ -133,7 +133,6 @@ class TopicSelectionScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 28),
-            // 2-column grid for first 4 topics
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -154,7 +153,6 @@ class TopicSelectionScreen extends StatelessWidget {
                   .toList(),
             ),
             const SizedBox(height: 16),
-            // "Gemischt" spans full width
             _TopicCard(
               label: _topics[4]['label'],
               icon: _topics[4]['icon'],
@@ -226,22 +224,35 @@ class _TopicCard extends StatelessWidget {
   }
 }
 
-// ─── FLASHCARD SCREEN ─────────────────────────────────────────────────────────
+// ─── CARD DATA ────────────────────────────────────────────────────────────────
 
-// ─── FLASHCARD SCREEN ─────────────────────────────────────────────────────────
-
-// Define the card pools outside the class
 const Map<String, List<Map<String, String>>> topicCards = {
   'Analysis': [
     {
       'question': 'Was ist die Ableitung von f(x) = x²?',
       'answer': r"f'(x) = 2x",
     },
+    {
+      'question': 'Was ist die Ableitung von f(x) = sin(x)?',
+      'answer': r"f'(x) = \cos(x)",
+    },
+    {
+      'question': 'Was ist das Integral von f(x) = 2x?',
+      'answer': r'\int 2x\,dx = x^2 + C',
+    },
   ],
   'Geometrie': [
     {
       'question': 'Wie lautet die Formel für die Kreisfläche?',
       'answer': r'A = \pi r^2',
+    },
+    {
+      'question': 'Wie berechnet man den Umfang eines Kreises?',
+      'answer': r'U = 2\pi r',
+    },
+    {
+      'question': 'Wie lautet die Formel für das Volumen einer Kugel?',
+      'answer': r'V = \frac{4}{3}\pi r^3',
     },
   ],
   'Stochastik': [
@@ -250,22 +261,57 @@ const Map<String, List<Map<String, String>>> topicCards = {
           'Was ist die Wahrscheinlichkeit eines Ereignisses A in einem Laplace-Experiment?',
       'answer': r'P(A) = \frac{\text{günstig}}{\text{möglich}}',
     },
+    {
+      'question': 'Wie lautet die Binomialformel für P(X = k)?',
+      'answer': r'P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}',
+    },
+    {
+      'question': 'Was ist der Erwartungswert einer Binomialverteilung?',
+      'answer': r'E(X) = n \cdot p',
+    },
   ],
   'Grundlagen': [
     {
       'question': 'Wie lautet der Satz des Pythagoras?',
       'answer': r'a^2 + b^2 = c^2',
     },
+    {
+      'question': 'Wie lautet die Mitternachtsformel?',
+      'answer': r'x_{1,2} = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}',
+    },
+    {
+      'question': 'Was ist der Logarithmus zur Basis 10 von 1000?',
+      'answer': r'\log_{10}(1000) = 3',
+    },
   ],
 };
 
 List<Map<String, String>> getCardsForTopic(String topic) {
   if (topic == 'Gemischt') {
-    // Combine all pools
-    return topicCards.values.expand((cards) => cards).toList();
+    final all = topicCards.values.expand((cards) => cards).toList();
+    all.shuffle(Random());
+    return all;
   }
-  return topicCards[topic] ?? [];
+  return List.from(topicCards[topic] ?? []);
 }
+
+// ─── SESSION RESULT ───────────────────────────────────────────────────────────
+
+class SessionResult {
+  final int total;
+  final int known;
+  final int unknown;
+  final int maxStreak;
+
+  const SessionResult({
+    required this.total,
+    required this.known,
+    required this.unknown,
+    required this.maxStreak,
+  });
+}
+
+// ─── FLASHCARD SCREEN ─────────────────────────────────────────────────────────
 
 class FancyMathCards extends StatefulWidget {
   final String topic;
@@ -280,11 +326,20 @@ class _FancyMathCardsState extends State<FancyMathCards>
   late AnimationController _controller;
   late Animation<double> _animation;
   late List<Map<String, String>> _cards;
+
   int _currentIndex = 0;
   bool _isFront = true;
 
+  // Scoring
+  int _knownCount = 0;
+  int _unknownCount = 0;
+  int _currentStreak = 0;
+  int _maxStreak = 0;
+
   final Color myBlue = const Color(0xFF264358);
   final Color myOrange = const Color(0xFFF5AC26);
+  final Color myGreen = const Color(0xFF2E7D32);
+  final Color myRed = const Color(0xFFC62828);
 
   @override
   void initState() {
@@ -292,7 +347,7 @@ class _FancyMathCardsState extends State<FancyMathCards>
     _cards = getCardsForTopic(widget.topic);
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 500),
     );
     _animation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutBack),
@@ -305,14 +360,40 @@ class _FancyMathCardsState extends State<FancyMathCards>
     } else {
       _controller.reverse();
     }
-    _isFront = !_isFront;
+    setState(() => _isFront = !_isFront);
   }
 
-  void _nextCard() {
+  void _rate(bool known) {
     setState(() {
-      _currentIndex = (_currentIndex + 1) % _cards.length;
-      _isFront = true;
-      _controller.reset();
+      if (known) {
+        _knownCount++;
+        _currentStreak++;
+        if (_currentStreak > _maxStreak) _maxStreak = _currentStreak;
+      } else {
+        _unknownCount++;
+        _currentStreak = 0;
+      }
+
+      final isLast = _currentIndex == _cards.length - 1;
+      if (isLast) {
+        // Navigate to stats screen
+        final result = SessionResult(
+          total: _cards.length,
+          known: _knownCount,
+          unknown: _unknownCount,
+          maxStreak: _maxStreak,
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StatsScreen(topic: widget.topic, result: result),
+          ),
+        );
+      } else {
+        _currentIndex++;
+        _isFront = true;
+        _controller.reset();
+      }
     });
   }
 
@@ -322,6 +403,7 @@ class _FancyMathCardsState extends State<FancyMathCards>
   @override
   Widget build(BuildContext context) {
     final card = _cards[_currentIndex];
+    final progress = (_currentIndex + 1) / _cards.length;
 
     return Scaffold(
       backgroundColor: Colors.grey[300],
@@ -342,24 +424,83 @@ class _FancyMathCardsState extends State<FancyMathCards>
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              widget.topic,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: myBlue,
-              ),
+            const SizedBox(height: 20),
+
+            // ── Score & Streak Row ──
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _StatChip(
+                  icon: Icons.check_circle,
+                  label: '$_knownCount',
+                  color: myGreen,
+                ),
+                _StatChip(
+                  icon: Icons.local_fire_department,
+                  label: '$_currentStreak',
+                  color: myOrange,
+                ),
+                _StatChip(
+                  icon: Icons.cancel,
+                  label: '$_unknownCount',
+                  color: myRed,
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
+
+            const SizedBox(height: 16),
+
+            // ── Progress Bar ──
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.topic,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: myBlue,
+                      ),
+                    ),
+                    Text(
+                      '${_currentIndex + 1} / ${_cards.length}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 10,
+                    backgroundColor: Colors.grey[400],
+                    valueColor: AlwaysStoppedAnimation<Color>(myOrange),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Hint ──
             Text(
-              'Tippe auf die Karte zum Umdrehen',
+              _isFront
+                  ? 'Tippe auf die Karte zum Umdrehen'
+                  : 'Kanntest du die Antwort?',
               style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
-            const SizedBox(height: 32),
+
+            const SizedBox(height: 20),
+
+            // ── Flashcard ──
             GestureDetector(
               onTap: _flipCard,
               child: AnimatedBuilder(
@@ -378,25 +519,36 @@ class _FancyMathCardsState extends State<FancyMathCards>
                 },
               ),
             ),
+
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _nextCard,
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text(
-                'Nächste Karte',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: myBlue,
-                foregroundColor: myOrange,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 14,
+
+            // ── Know / Don't Know Buttons (only after flip) ──
+            AnimatedOpacity(
+              opacity: _isFront ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              child: IgnorePointer(
+                ignoring: _isFront,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _RatingButton(
+                        label: 'Nicht gewusst',
+                        icon: Icons.close,
+                        color: myRed,
+                        onPressed: () => _rate(false),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _RatingButton(
+                        label: 'Gewusst!',
+                        icon: Icons.check,
+                        color: myGreen,
+                        onPressed: () => _rate(true),
+                      ),
+                    ),
+                  ],
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 5,
               ),
             ),
           ],
@@ -413,7 +565,7 @@ class _FancyMathCardsState extends State<FancyMathCards>
         textAlign: TextAlign.center,
         style: TextStyle(
           color: myOrange,
-          fontSize: 22,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -428,7 +580,7 @@ class _FancyMathCardsState extends State<FancyMathCards>
         backgroundColor: Colors.white,
         child: Math.tex(
           answer,
-          textStyle: TextStyle(fontSize: 30, color: myBlue),
+          textStyle: TextStyle(fontSize: 28, color: myBlue),
         ),
       ),
     );
@@ -436,8 +588,8 @@ class _FancyMathCardsState extends State<FancyMathCards>
 
   Widget _cardWrapper({required Color backgroundColor, required Widget child}) {
     return Container(
-      width: 320,
-      height: 220,
+      width: double.infinity,
+      height: 200,
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(25),
@@ -458,5 +610,356 @@ class _FancyMathCardsState extends State<FancyMathCards>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+}
+
+// ─── HELPER WIDGETS ───────────────────────────────────────────────────────────
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RatingButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
+
+  const _RatingButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(
+        label,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 4,
+      ),
+    );
+  }
+}
+
+// ─── STATS SCREEN ─────────────────────────────────────────────────────────────
+
+class StatsScreen extends StatelessWidget {
+  final String topic;
+  final SessionResult result;
+
+  const StatsScreen({super.key, required this.topic, required this.result});
+
+  final Color myBlue = const Color(0xFF264358);
+  final Color myOrange = const Color(0xFFF5AC26);
+  final Color myGreen = const Color(0xFF2E7D32);
+  final Color myRed = const Color(0xFFC62828);
+
+  void _goHome(BuildContext context) =>
+      Navigator.popUntil(context, (route) => route.isFirst);
+
+  String get _emoji {
+    final pct = result.known / result.total;
+    if (pct == 1.0) return '🏆';
+    if (pct >= 0.75) return '🎉';
+    if (pct >= 0.5) return '👍';
+    return '💪';
+  }
+
+  String get _message {
+    final pct = result.known / result.total;
+    if (pct == 1.0) return 'Perfekt! Alle Karten gewusst!';
+    if (pct >= 0.75) return 'Sehr gut! Fast geschafft!';
+    if (pct >= 0.5) return 'Gut gemacht! Weiter üben!';
+    return 'Nicht aufgeben – Übung macht den Meister!';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final knownPct = result.total > 0 ? result.known / result.total : 0.0;
+
+    return Scaffold(
+      backgroundColor: Colors.grey[300],
+      appBar: AppBar(
+        title: Image.asset(
+          'assets/images/akademus_logo.jpg',
+          height: 80,
+          fit: BoxFit.contain,
+        ),
+        toolbarHeight: 100,
+        backgroundColor: Colors.white,
+        foregroundColor: myOrange,
+        automaticallyImplyLeading: false,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Header ──
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: myBlue,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Text(_emoji, style: const TextStyle(fontSize: 52)),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sitzung abgeschlossen!',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: myOrange,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    topic,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Progress Arc / Bar ──
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '${(knownPct * 100).round()}% gewusst',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: myBlue,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: knownPct,
+                      minHeight: 14,
+                      backgroundColor: myRed.withOpacity(0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(myGreen),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Stat Cards ──
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.check_circle,
+                    value: '${result.known}',
+                    label: 'Gewusst',
+                    color: myGreen,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.cancel,
+                    value: '${result.unknown}',
+                    label: 'Nicht gewusst',
+                    color: myRed,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.style,
+                    value: '${result.total}',
+                    label: 'Karten gesamt',
+                    color: myBlue,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatCard(
+                    icon: Icons.local_fire_department,
+                    value: '${result.maxStreak}',
+                    label: 'Beste Serie',
+                    color: myOrange,
+                  ),
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            // ── Actions ──
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => FancyMathCards(topic: topic)),
+              ),
+              icon: const Icon(Icons.refresh),
+              label: const Text(
+                'Nochmal üben',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: myBlue,
+                foregroundColor: myOrange,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _goHome(context),
+              icon: const Icon(Icons.home),
+              label: const Text(
+                'Zur Startseite',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: myBlue,
+                side: BorderSide(color: myBlue, width: 2),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  const _StatCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+        ],
+      ),
+    );
   }
 }

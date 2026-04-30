@@ -43,8 +43,7 @@ class HomeScreen extends StatelessWidget {
           // 2. An optional Overlay (to make text more readable)
           Container(color: Colors.white.withOpacity(0.8)),
 
-          // 3. Your Original Content
-          // Mathe Karteikarten Widget
+          // Buttons
           const MenuButton(
             label: 'Mathe Karteikarten',
             icon: Icons.style_outlined,
@@ -108,148 +107,21 @@ class HomeScreen extends StatelessWidget {
 class TopicSelectionScreen extends StatelessWidget {
   const TopicSelectionScreen({super.key});
 
-  final Color myBlue = const Color(0xFF264358);
-  final Color myOrange = const Color(0xFFF5AC26);
-
-  static const List<Map<String, dynamic>> _topics = [
-    {'label': 'Analysis', 'icon': Icons.show_chart},
-    {'label': 'Geometrie', 'icon': Icons.square_foot},
-    {'label': 'Stochastik', 'icon': Icons.bar_chart},
-    {'label': 'Grundlagen', 'icon': Icons.functions},
-    {'label': 'Gemischt', 'icon': Icons.shuffle},
-  ];
-
-  void _goHome(BuildContext context) =>
-      Navigator.popUntil(context, (route) => route.isFirst);
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[300],
-      appBar: AppBar(
-        title: GestureDetector(
-          onTap: () => _goHome(context),
-          child: Image.asset(
-            'assets/images/akademus_logo.jpg',
-            height: 80,
-            fit: BoxFit.contain,
-          ),
-        ),
-        toolbarHeight: 100,
-        backgroundColor: Colors.white,
-        foregroundColor: myOrange,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => _goHome(context),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Thema wählen',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: myBlue,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Wähle ein Thema, um mit den Karteikarten zu beginnen.',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 28),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.6,
-              children: _topics
-                  .take(4)
-                  .map(
-                    (t) => _TopicCard(
-                      label: t['label'],
-                      icon: t['icon'],
-                      myBlue: myBlue,
-                      myOrange: myOrange,
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 16),
-            _TopicCard(
-              label: _topics[4]['label'],
-              icon: _topics[4]['icon'],
-              myBlue: myBlue,
-              myOrange: myOrange,
-              fullWidth: true,
-            ),
-          ],
-        ),
-      ),
+    return GridSelectionScreen(
+      title: 'Thema wählen',
+      subtitle: 'Wähle ein Thema, um mit den Karteikarten zu beginnen.',
+      items: const [
+        {'label': 'Analysis', 'icon': Icons.show_chart},
+        {'label': 'Geometrie', 'icon': Icons.square_foot},
+        {'label': 'Stochastik', 'icon': Icons.bar_chart},
+        {'label': 'Grundlagen', 'icon': Icons.functions},
+        {'label': 'Gemischt', 'icon': Icons.shuffle},
+      ],
+      // This tells the blueprint: "When a card is tapped, go to the flashcards"
+      onItemSelected: (label) => FancyMathCards(topic: label),
     );
-  }
-}
-
-class _TopicCard extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color myBlue;
-  final Color myOrange;
-  final bool fullWidth;
-
-  const _TopicCard({
-    required this.label,
-    required this.icon,
-    required this.myBlue,
-    required this.myOrange,
-    this.fullWidth = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final card = GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => FancyMathCards(topic: label)),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: myBlue,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.18),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: myOrange, size: 28),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: myOrange,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    return fullWidth ? SizedBox(width: double.infinity, child: card) : card;
   }
 }
 
@@ -1035,6 +907,144 @@ class MenuButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: 6,
+        ),
+      ),
+    );
+  }
+}
+
+// --- GridSelectionScreen --- second layer menu blueprint
+class GridSelectionScreen extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final List<Map<String, dynamic>> items;
+  final Widget Function(String label)
+  onItemSelected; // Tells the blueprint where to go next
+
+  const GridSelectionScreen({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.items,
+    required this.onItemSelected,
+  });
+
+  // Consistent brand colors
+  final Color myBlue = const Color(0xFF264358);
+  final Color myOrange = const Color(0xFFF5AC26);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[300],
+      appBar: AppBar(
+        title: Image.asset(
+          'assets/images/akademus_logo.jpg',
+          height: 80,
+          fit: BoxFit.contain,
+        ),
+        toolbarHeight: 100,
+        backgroundColor: Colors.white,
+        foregroundColor: myOrange,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: myBlue,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 28),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.5,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return _SelectionCard(
+                    label: item['label'],
+                    icon: item['icon'],
+                    color: myBlue,
+                    accent: myOrange,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => onItemSelected(item['label']),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Internal Helper Widget for the Cards
+class _SelectionCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _SelectionCard({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: accent, size: 30),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: accent,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 void main() => runApp(const MaterialApp(home: HomeScreen()));
 
@@ -172,7 +172,7 @@ const Map<String, List<Map<String, String>>> topicCards = {
 
         \end{aligned}
         ''',
-      'image': 'assets/images/tikz/polstellen_test.svg',
+      'image': 'assets/images/tikz/polstellen_test.webp',
     },
     {
       'question': r'\text{Was ist die Ableitung von } f(x) = x^2?',
@@ -519,46 +519,50 @@ class _FancyMathCardsState extends State<FancyMathCards>
 
   Widget _buildBack(Map<String, String> card) {
     final String? imagePath = card['image'];
-
-    // Sanitize the LaTeX string to prevent rendering errors[cite: 2]
     final String rawContent = card['answer'] ?? '';
     final String sanitizedAnswer = rawContent
         .replaceAll(RegExp(r'[\n\r\t]'), ' ')
         .trim();
 
     return Transform(
-      transform: Matrix4.identity()..rotateY(pi),
+      transform: Matrix4.identity()..rotateY(pi), // Note the cascade operator
       alignment: Alignment.center,
       child: Stack(
         children: [
           _cardWrapper(
             backgroundColor: Colors.white,
             child: Column(
-              mainAxisSize: MainAxisSize.min, // Wrap content tightly[cite: 2]
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Math.tex(
                   sanitizedAnswer,
-                  key: ValueKey(sanitizedAnswer),
-                  textStyle: const TextStyle(
-                    fontSize: 20,
-                    color: Color(0xFF264358),
+                  textStyle: TextStyle(
+                    fontSize: _isExpanded ? 22 : 18,
+                    color: myBlue,
                   ),
                 ),
                 if (imagePath != null) ...[
                   const SizedBox(height: 16),
-                  imagePath.endsWith('.svg')
-                      ? SvgPicture.asset(imagePath, fit: BoxFit.contain)
-                      : Image.asset(imagePath, fit: BoxFit.contain),
+                  // Flutter handles WebP automatically with this widget
+                  Image.asset(
+                    imagePath,
+                    height: _isExpanded ? 300 : 150,
+                    fit: BoxFit.contain,
+                    // Optional: adds a smooth fade-in as the image loads from memory
+                    gaplessPlayback: true,
+                  ),
                 ],
               ],
             ),
           ),
-          // The Expand Button[cite: 2]
           Positioned(
             bottom: 8,
             right: 8,
             child: IconButton(
-              icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
+              icon: Icon(
+                _isExpanded ? Icons.unfold_less : Icons.unfold_more,
+                color: myBlue.withOpacity(0.6),
+              ),
               onPressed: () => setState(() => _isExpanded = !_isExpanded),
             ),
           ),
@@ -574,8 +578,9 @@ class _FancyMathCardsState extends State<FancyMathCards>
       width: double.infinity,
       constraints: BoxConstraints(
         minHeight: 200,
-        // Cap the vertical height so the rating buttons remain visible
-        maxHeight: _isExpanded ? 500 : 200,
+        // The card grows vertically when expanded, but never pushes
+        // the rating buttons off-screen.
+        maxHeight: _isExpanded ? 400 : 200,
       ),
       decoration: BoxDecoration(
         color: backgroundColor,
@@ -591,10 +596,9 @@ class _FancyMathCardsState extends State<FancyMathCards>
       alignment: Alignment.center,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        // 1. Vertical scrolling for long content
+        // Bidirectional scrolling remains active
         child: SingleChildScrollView(
           scrollDirection: Axis.vertical,
-          // 2. Horizontal scrolling for wide formulas or images
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: child,
